@@ -13,7 +13,6 @@
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
             background-color: #051405;
-            user-select: none;
         }
 
         #canvas-container {
@@ -42,7 +41,7 @@
 
         .hud-element {
             pointer-events: auto;
-            background: rgba(10, 30, 10, 0.9);
+            background: rgba(10, 30, 10, 0.85);
             border: 3px solid #3ba83b;
             box-shadow: 0 0 15px rgba(59, 168, 59, 0.5);
             color: #4af24a;
@@ -143,15 +142,13 @@
             color: #ebd036;
             margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(235,208,54,0.4);
-            padding: 0 10px;
         }
 
         .modal-screen p {
             font-size: 1.4rem;
-            max-width: 600px;
+            max-width: 500px;
             margin-bottom: 30px;
             line-height: 1.6;
-            padding: 0 20px;
         }
 
         .start-btn {
@@ -164,7 +161,6 @@
             border-radius: 8px;
             cursor: pointer;
             box-shadow: 0 5px 0 #b09b23;
-            pointer-events: auto;
         }
 
         .start-btn:hover { background: #fbe662; }
@@ -177,7 +173,7 @@
     <div id="start-screen" class="modal-screen">
         <h1>🦖 JURASSIC RIVER ESCAPE</h1>
         <p>Help the dinosaur cross the river safely! Click <b>NOUN</b> to leap forward onto a safe wooden plank. Don't click a <b>VERB</b>, or you will get trapped in the wild waters!</p>
-        <button class="start-btn" id="real-start-button" onclick="startGameSession()">START ADVENTURE</button>
+        <button class="start-btn" onclick="initGame()">START ADVENTURE</button>
     </div>
 
     <div id="end-screen" class="modal-screen hidden">
@@ -204,7 +200,6 @@
     </div>
 
 <script>
-    // --- Vocabulary Database ---
     const gameDatabase = [
         { word: "T-Rex", type: "noun" }, { word: "Run", type: "verb" },
         { word: "Island", type: "noun" }, { word: "Roar", type: "verb" },
@@ -223,18 +218,30 @@
     let timeLeft = 45;
     let timerInterval = null;
     let audioCtx = null;
-    let gameActive = false;
 
-    // --- 3D Scene Global Hooks ---
     let scene, camera, renderer;
     let dinoMesh, riverMesh;
     let planksArray = [];
     const plankSpacing = 6; 
 
-    // 1. Initialize the 3D graphics immediately behind the loading screen frame
+    function initGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        startAudioLoop();
+        gameItems = [...gameDatabase].sort(() => 0.5 - Math.random());
+        setup3DWorld();
+        renderCurrentTurn();
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-hud').innerText = `⏱️ TIME: ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                endGame(false, "Time ran out! The volcano erupted!");
+            }
+        }, 1000);
+    }
+
     function setup3DWorld() {
         const container = document.getElementById('canvas-container');
-        if (!container) return;
         
         scene = new THREE.Scene();
         scene.background = new THREE.Color('#0b240b'); 
@@ -249,30 +256,39 @@
         renderer.shadowMap.enabled = true;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight('#ffffff', 0.6);
+        const ambientLight = new THREE.AmbientLight('#ffffff', 0.5);
         scene.add(ambientLight);
 
         const sunLight = new THREE.DirectionalLight('#ebd036', 1.2);
         sunLight.position.set(10, 30, 20);
+        sunLight.castShadow = true;
         scene.add(sunLight);
 
-        // River Build
         const riverGeo = new THREE.PlaneGeometry(30, 200);
-        const riverMat = new THREE.MeshStandardMaterial({ color: '#103a4a', roughness: 0.1, metalness: 0.8 });
+        const riverMat = new THREE.MeshStandardMaterial({ 
+            color: '#103a4a', 
+            roughness: 0.1, 
+            metalness: 0.8 
+        });
         riverMesh = new THREE.Mesh(riverGeo, riverMat);
         riverMesh.rotation.x = -Math.PI / 2;
         riverMesh.position.y = -1;
         scene.add(riverMesh);
 
-        // Banks Build
         const bankGeo = new THREE.BoxGeometry(8, 5, 200);
         const bankMat = new THREE.MeshStandardMaterial({ color: '#143d14', roughness: 0.9 });
-        const leftBank = new THREE.Mesh(bankGeo, bankMat); leftBank.position.set(-12, 1, -50); scene.add(leftBank);
-        const rightBank = new THREE.Mesh(bankGeo, bankMat); rightBank.position.set(12, 1, -50); scene.add(rightBank);
+        
+        const leftBank = new THREE.Mesh(bankGeo, bankMat);
+        leftBank.position.set(-12, 1, -50);
+        scene.add(leftBank);
 
-        // Planks Initialization
+        const rightBank = new THREE.Mesh(bankGeo, bankMat);
+        rightBank.position.set(12, 1, -50);
+        scene.add(rightBank);
+
         const plankGeo = new THREE.BoxGeometry(5, 0.6, 2.5);
         const plankMat = new THREE.MeshStandardMaterial({ color: '#5c4033', roughness: 0.7 });
+
         for(let i = 0; i < 22; i++) {
             const plank = new THREE.Mesh(plankGeo, plankMat);
             plank.position.set(0, -0.7, -i * plankSpacing);
@@ -280,14 +296,19 @@
             planksArray.push(plank);
         }
 
-        // Dino Build
         const dinoGroup = new THREE.Group();
         const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.4, 2.5), new THREE.MeshStandardMaterial({color: '#15803d'}));
-        body.position.y = 0.7; dinoGroup.add(body);
+        body.position.y = 0.7;
+        dinoGroup.add(body);
+
         const head = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1, 1.5), new THREE.MeshStandardMaterial({color: '#16a34a'}));
-        head.position.set(0, 1.6, -1); dinoGroup.add(head);
+        head.position.set(0, 1.6, -1);
+        dinoGroup.add(head);
+
         const tail = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, 1.8), new THREE.MeshStandardMaterial({color: '#14532d'}));
-        tail.position.set(0, 0.5, 1.8); tail.rotation.x = -0.2; dinoGroup.add(tail);
+        tail.position.set(0, 0.5, 1.8);
+        tail.rotation.x = -0.2;
+        dinoGroup.add(tail);
 
         dinoMesh = dinoGroup;
         dinoMesh.position.set(0, 0, 0);
@@ -295,25 +316,6 @@
 
         window.addEventListener('resize', onWindowResize, false);
         animateEngine();
-    }
-
-    // 2. Run when user taps 'Start Adventure'
-    function startGameSession() {
-        document.getElementById('start-screen').classList.add('hidden');
-        gameActive = true;
-        
-        startAudioLoop();
-        gameItems = [...gameDatabase].sort(() => 0.5 - Math.random());
-        renderCurrentTurn();
-
-        timerInterval = setInterval(() => {
-            if(!gameActive) return;
-            timeLeft--;
-            document.getElementById('timer-hud').innerText = `⏱️ TIME: ${timeLeft}s`;
-            if (timeLeft <= 0) {
-                endGame(false, "Time ran out! The volcano erupted!");
-            }
-        }, 1000);
     }
 
     function onWindowResize() {
@@ -332,19 +334,25 @@
     }
 
     function processAnswer(playerInput) {
-        if(!gameActive) return;
         const solution = gameItems[currentStep].type;
+        const billboard = document.getElementById('word-billboard');
 
         if(playerInput === solution && solution === 'noun') {
             currentStep++;
             animateDinoJump();
             renderCurrentTurn();
         } else {
+            billboard.style.transform = "scale(0.8)";
+            setTimeout(() => billboard.style.transform = "scale(1)", 200);
             animateDinoTrap();
         }
     }
 
-    let targetZ = 0, jumpTime = 0, isJumping = false, isTrapped = false, trapTime = 0;
+    let targetZ = 0;
+    let jumpTime = 0;
+    let isJumping = false;
+    let isTrapped = false;
+    let trapTime = 0;
 
     function animateDinoJump() {
         targetZ = -currentStep * plankSpacing;
@@ -384,17 +392,18 @@
             trapTime += 0.05;
             dinoMesh.position.y = -0.5 + Math.sin(trapTime * 5) * 0.2;
             dinoMesh.position.x = Math.sin(trapTime * 10) * 0.3; 
-            if(trapTime > 2.5) {
+            
+            if(trapTime > 3.0) {
                 isTrapped = false;
                 dinoMesh.position.y = 0;
                 dinoMesh.position.x = 0;
             }
         }
+
         renderer.render(scene, camera);
     }
 
     function endGame(isVictory, summaryText) {
-        gameActive = false;
         clearInterval(timerInterval);
         document.getElementById('end-screen').classList.remove('hidden');
         document.getElementById('end-title').innerText = isVictory ? "🦖 VICTORY!" : "⚠️ TRAPPED!";
@@ -405,29 +414,32 @@
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             setInterval(() => {
-                if(!isTrapped && gameActive && timeLeft > 0) {
+                if(!isTrapped && timeLeft > 0) {
                     playTone(60, 0.1); 
                 }
             }, 800);
-        } catch(e) { console.log("Audio contexts blocked"); }
+        } catch(e) {
+            console.log("Audio error setup tracking system");
+        }
     }
 
     function playTone(freq, duration) {
         if (!audioCtx) return;
         const osc = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
+        
         osc.type = 'triangle'; 
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
+        
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
     }
-
-    // Trigger 3D canvas compilation as soon as script asset loads
-    window.onload = setup3DWorld;
 </script>
 </body>
 </html>
