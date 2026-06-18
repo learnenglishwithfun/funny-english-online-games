@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dino English Adventure</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:linear-gradient(to bottom,#87CEEB,#d4f1ff);
+min-height:100vh;
+overflow-x:hidden;
+}
+
+/* Animated Clouds */
+.cloud{
+position:absolute;
+font-size:50px;
+animation:moveCloud 25s linear infinite;
+}
+
+.cloud:nth-child(2){
+top:100px;
+animation-duration:35s;
+}
+
+@keyframes moveCloud{
+from{left:-200px;}
+to{left:120%;}
+}
+
+/* Header */
+header{
+text-align:center;
+padding:30px;
+color:white;
+}
+
+header h1{
+font-size:3.2rem;
+text-shadow:3px 3px 5px rgba(0,0,0,0.3);
+}
+
+header p{
+font-size:1.2rem;
+margin-top:10px;
+}
+
+/* Bouncing Dino */
+.dino{
+font-size:90px;
+animation:bounce 2s infinite;
+}
+
+@keyframes bounce{
+0%,100%{transform:translateY(0);}
+50%{transform:translateY(-15px);}
+}
+
+/* Cards */
+.cards{
+max-width:1200px;
+margin:auto;
+padding:20px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:25px;
+}
+
+.card{
+background:white;
+padding:25px;
+border-radius:20px;
+text-align:center;
+box-shadow:0 8px 20px rgba(0,0,0,0.2);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-10px) scale(1.03);
+}
+
+.icon{
+font-size:60px;
+}
+
+.card h2{
+margin:15px 0;
+color:#2c3e50;
+}
+
+.card p{
+color:#666;
+margin-bottom:20px;
+}
+
+.play{
+display:inline-block;
+padding:12px 25px;
+background:#27ae60;
+color:white;
+text-decoration:none;
+border-radius:10px;
+font-weight:bold;
+}
+
+.play:hover{
+background:#1e8449;
+}
+
+/* Footer */
+footer{
+text-align:center;
+padding:30px;
+font-weight:bold;
+color:#2c3e50;
+}
+</style>
+
+</head>
+<body>
+
+<div class="cloud">☁️</div>
+<div class="cloud">☁️ ☁️ ☁️</div>
+
+<header>
+<div class="dino">🦖</div>
+<h1>Dino English Adventure</h1>
+<p>Choose your English mission!</p>
+</header>
+
+<div class="cards">
+
+<div class="card">
+<div class="icon">🦕</div>
+<h2>Grammar Island</h2>
+<p>Nouns, Verbs, Adjectives & Pronouns</p>
+<a class="play" href="grammar-island.html">PLAY</a>
+</div>
+
+<div class="card">
+<div class="icon">📚</div>
+<h2>Vocabulary Cove</h2>
+<p>Word meanings and spelling games</p>
+<a class="play" href="vocabulary-cove.html">PLAY</a>
+</div>
+
+<div class="card">
+<div class="icon">🏰</div>
+<h2>Sentence Castle</h2>
+<p>Build sentences and punctuation</p>
+<a class="play" href="sentence-castle.html">PLAY</a>
+</div>
+
+<div class="card">
+<div class="icon">🌳</div>
+<h2>Reading Forest</h2>
+<p>Reading and comprehension adventures</p>
+<a class="play" href="reading-forest.html">PLAY</a>
+</div>
+
+</div>
+
+<footer>
+🦖 Welcome to Dino English Adventure
+</footer>
+
+</body>
+</html>
