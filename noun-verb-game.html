@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Noun vs Verb Game</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f2f6ff;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      margin: 50px auto;
+      width: 300px;
+      border-radius: 15px;
+      box-shadow: 0px 0px 10px #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .noun { background: #4CAF50; color: white; }
+    .verb { background: #2196F3; color: white; }
+    .next { background: #ff9800; color: white; }
+  </style>
+</head>
+<body>
+
+<h1>🎮 Noun vs Verb Game</h1>
+
+<div class="card">
+  <h2 id="word">Loading...</h2>
+
+  <button class="noun" onclick="check('noun')">Noun</button>
+  <button class="verb" onclick="check('verb')">Verb</button>
+
+  <h3 id="result"></h3>
+  <h3>Score: <span id="score">0</span></h3>
+
+  <button class="next" onclick="nextWord()">Next Word</button>
+</div>
+
+<script>
+const words = [
+  {word:"Apple", type:"noun"},
+  {word:"Run", type:"verb"},
+  {word:"Book", type:"noun"},
+  {word:"Jump", type:"verb"},
+  {word:"Teacher", type:"noun"},
+  {word:"Write", type:"verb"}
+];
+
+let current = 0;
+let score = 0;
+
+function loadWord() {
+  document.getElementById("word").innerText = words[current].word;
+  document.getElementById("result").innerText = "";
+}
+
+function check(answer) {
+  if(answer === words[current].type) {
+    document.getElementById("result").innerText = "✅ Correct!";
+    score++;
+  } else {
+    document.getElementById("result").innerText = "❌ Wrong!";
+  }
+  document.getElementById("score").innerText = score;
+}
+
+function nextWord() {
+  current++;
+  if(current >= words.length) {
+    alert("Game Finished! Your score: " + score);
+    current = 0;
+    score = 0;
+  }
+  loadWord();
+}
+
+loadWord();
+</script>
+
+</body>
+</html>
