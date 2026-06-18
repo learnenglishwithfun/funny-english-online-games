@@ -1,259 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Grammar Island V3 - Jurassic Survival</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino River Escape 3D - Jurassic Nouns</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #051405;
+        }
 
-<style>
-body{
-margin:0;
-overflow:hidden;
-font-family:Arial;
-background:black;
-}
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
 
-/* BACKGROUND LAYERS */
-.sky{
-position:absolute;
-width:100%;
-height:100%;
-background:linear-gradient(#061a10,#0b2e1f);
-z-index:0;
-}
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 20px;
+        }
 
-/* FOG */
-.fog{
-position:absolute;
-width:200%;
-height:100%;
-background:rgba(255,255,255,0.03);
-animation:moveFog 20s linear infinite;
-z-index:1;
-}
+        .hud-element {
+            pointer-events: auto;
+            background: rgba(10, 30, 10, 0.85);
+            border: 3px solid #3ba83b;
+            box-shadow: 0 0 15px rgba(59, 168, 59, 0.5);
+            color: #4af24a;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
 
-@keyframes moveFog{
-0%{transform:translateX(0);}
-100%{transform:translateX(-50%);}
-}
+        #top-hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
 
-/* JUNGLE TREES */
-.trees{
-position:absolute;
-width:200%;
-height:100%;
-background:url('https://i.imgur.com/5R2K5Qw.png');
-background-size:contain;
-opacity:0.2;
-animation:moveTrees 30s linear infinite;
-z-index:2;
-}
+        #game-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
 
-@keyframes moveTrees{
-0%{transform:translateX(0);}
-100%{transform:translateX(-40%);}
-}
+        #word-billboard {
+            pointer-events: auto;
+            background: linear-gradient(135deg, #132d13, #081a08);
+            border: 4px solid #ebd036;
+            box-shadow: 0 0 25px rgba(235, 208, 54, 0.6);
+            color: #ffffff;
+            font-size: 3rem;
+            padding: 20px 60px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+            transform: scale(1);
+            transition: transform 0.2s;
+        }
 
-/* GAME WORLD */
-.world{
-position:absolute;
-width:100%;
-height:100%;
-z-index:5;
-}
+        .controls-container {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+        }
 
-/* PATH */
-.path{
-position:absolute;
-bottom:0;
-width:200%;
-height:200px;
-background:linear-gradient(#3b2f2f,#1a1a1a);
-animation:movePath 6s linear infinite;
-}
+        .game-btn {
+            pointer-events: auto;
+            flex: 1;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 20px;
+            border: 4px solid;
+            border-radius: 12px;
+            cursor: pointer;
+            text-shadow: 1px 1px 2px black;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
 
-@keyframes movePath{
-0%{transform:translateX(0);}
-100%{transform:translateX(-50%);}
-}
+        .game-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+        }
 
-/* STONES */
-.stone{
-position:absolute;
-width:120px;
-height:60px;
-background:#444;
-border-radius:10px;
-text-align:center;
-line-height:60px;
-color:white;
-font-weight:bold;
-}
+        #btn-noun {
+            background: #22c55e;
+            color: white;
+            border-color: #15803d;
+        }
 
-/* DINO */
-.dino{
-position:absolute;
-bottom:120px;
-left:45%;
-font-size:90px;
-animation:idle 1s infinite;
-z-index:10;
-}
+        #btn-verb {
+            background: #ef4444;
+            color: white;
+            border-color: #b91c1c;
+        }
 
-@keyframes idle{
-0%,100%{transform:translateY(0);}
-50%{transform:translateY(-5px);}
-}
+        .modal-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 15, 4, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #4af24a;
+            text-align: center;
+        }
 
-/* UI */
-.ui{
-position:absolute;
-top:10px;
-left:10px;
-z-index:20;
-background:rgba(0,0,0,0.5);
-padding:10px;
-color:white;
-border-radius:10px;
-}
+        .modal-screen h1 {
+            font-size: 3.5rem;
+            color: #ebd036;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(235,208,54,0.4);
+        }
 
-.wordBox{
-position:absolute;
-top:50px;
-right:20px;
-z-index:20;
-background:white;
-color:black;
-padding:15px;
-border-radius:10px;
-font-size:25px;
-font-weight:bold;
-}
+        .modal-screen p {
+            font-size: 1.4rem;
+            max-width: 500px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
 
-button{
-padding:15px;
-margin:5px;
-font-size:16px;
-border:none;
-cursor:pointer;
-border-radius:8px;
-}
+        .start-btn {
+            background: #ebd036;
+            color: #1c1c1c;
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #b09b23;
+        }
 
-.noun{background:#3498db;color:white;}
-.verb{background:#e74c3c;color:white;}
-
-/* POPUP */
-.popup{
-position:absolute;
-top:40%;
-left:40%;
-font-size:50px;
-display:none;
-z-index:30;
-}
-
-</style>
+        .start-btn:hover { background: #fbe662; }
+        .hidden { display: none !important; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-
 <body>
 
-<div class="sky"></div>
-<div class="fog"></div>
-<div class="trees"></div>
+    <div id="start-screen" class="modal-screen">
+        <h1>🦖 JURASSIC RIVER ESCAPE</h1>
+        <p>Help the dinosaur cross the river safely! Click <b>NOUN</b> to leap forward onto a safe wooden plank. Don't click a <b>VERB</b>, or you will get trapped in the wild waters!</p>
+        <button class="start-btn" onclick="initGame()">START ADVENTURE</button>
+    </div>
 
-<div class="world">
+    <div id="end-screen" class="modal-screen hidden">
+        <h1 id="end-title">GAME OVER</h1>
+        <p id="end-body">The timer ran out!</p>
+        <button class="start-btn" onclick="location.reload()">PLAY AGAIN 🔄</button>
+    </div>
 
-<div class="ui">
-Score: <span id="score">0</span>
-</div>
+    <div id="canvas-container"></div>
 
-<div class="wordBox" id="word">START</div>
+    <div id="ui-layer">
+        <div id="top-hud">
+            <div class="hud-element" id="timer-hud">⏱️ TIME: 45s</div>
+            <div class="hud-element" id="score-hud">🪵 PLANKS PASSED: 0/20</div>
+        </div>
 
-<button class="noun" onclick="answer('noun')">NOUN</button>
-<button class="verb" onclick="answer('verb')">VERB</button>
-
-<div class="dino">🦖</div>
-
-<div class="popup" id="popup">✔</div>
-
-<div class="path"></div>
-
-</div>
+        <div id="game-center">
+            <div id="word-billboard">LOADING...</div>
+            <div class="controls-container">
+                <button id="btn-noun" class="game-btn" onclick="processAnswer('noun')">NOUN</button>
+                <button id="btn-verb" class="game-btn" onclick="processAnswer('verb')">VERB</button>
+            </div>
+        </div>
+    </div>
 
 <script>
+    const gameDatabase = [
+        { word: "T-Rex", type: "noun" }, { word: "Run", type: "verb" },
+        { word: "Island", type: "noun" }, { word: "Roar", type: "verb" },
+        { word: "Volcano", type: "noun" }, { word: "Chomp", type: "verb" },
+        { word: "Egg", type: "noun" }, { word: "Fly", type: "verb" },
+        { word: "Jungle", type: "noun" }, { word: "Hide", type: "verb" },
+        { word: "Fossil", type: "noun" }, { word: "Swim", type: "verb" },
+        { word: "Tree", type: "noun" }, { word: "Stomp", type: "verb" },
+        { word: "Ranger", type: "noun" }, { word: "Hunt", type: "verb" },
+        { word: "Leaf", type: "noun" }, { word: "Sleep", type: "verb" },
+        { word: "Water", type: "noun" }, { word: "Climb", type: "verb" }
+    ];
 
-const words = [
-{w:"apple",t:"noun"},
-{w:"river",t:"noun"},
-{w:"book",t:"noun"},
-{w:"tiger",t:"noun"},
-{w:"school",t:"noun"},
-{w:"forest",t:"noun"},
-{w:"bridge",t:"noun"},
-{w:"mountain",t:"noun"},
-{w:"village",t:"noun"},
-{w:"stone",t:"noun"},
+    let gameItems = [];
+    let currentStep = 0;
+    let timeLeft = 45;
+    let timerInterval = null;
+    let audioCtx = null;
 
-{w:"run",t:"verb"},
-{w:"jump",t:"verb"},
-{w:"eat",t:"verb"},
-{w:"swim",t:"verb"},
-{w:"fly",t:"verb"},
-{w:"sleep",t:"verb"},
-{w:"talk",t:"verb"},
-{w:"write",t:"verb"},
-{w:"play",t:"verb"},
-{w:"drink",t:"verb"}
-];
+    let scene, camera, renderer;
+    let dinoMesh, riverMesh;
+    let planksArray = [];
+    const plankSpacing = 6; 
 
-let i=0;
-let score=0;
+    function initGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        startAudioLoop();
+        gameItems = [...gameDatabase].sort(() => 0.5 - Math.random());
+        setup3DWorld();
+        renderCurrentTurn();
 
-function load(){
-document.getElementById("word").innerText=words[i].w;
-}
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-hud').innerText = `⏱️ TIME: ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                endGame(false, "Time ran out! The volcano erupted!");
+            }
+        }, 1000);
+    }
 
-function sound(ok){
-let ctx=new AudioContext();
-let o=ctx.createOscillator();
-o.type="sine";
-o.frequency.value=ok?700:120;
-o.connect(ctx.destination);
-o.start();
-o.stop(ctx.currentTime+0.2);
-}
+    function setup3DWorld() {
+        const container = document.getElementById('canvas-container');
+        
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color('#0b240b'); 
+        scene.fog = new THREE.FogExp2('#0b240b', 0.015);
 
-function answer(type){
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 22, 14);
+        camera.lookAt(0, 0, -4);
 
-if(type===words[i].t){
-score+=10;
-document.getElementById("score").innerText=score;
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
 
-document.getElementById("popup").innerText="✔ SAFE STEP";
-sound(true);
+        const ambientLight = new THREE.AmbientLight('#ffffff', 0.5);
+        scene.add(ambientLight);
 
-}else{
-document.getElementById("popup").innerText="TRAP!";
-sound(false);
-}
+        const sunLight = new THREE.DirectionalLight('#ebd036', 1.2);
+        sunLight.position.set(10, 30, 20);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
 
-let p=document.getElementById("popup");
-p.style.display="block";
+        const riverGeo = new THREE.PlaneGeometry(30, 200);
+        const riverMat = new THREE.MeshStandardMaterial({ 
+            color: '#103a4a', 
+            roughness: 0.1, 
+            metalness: 0.8 
+        });
+        riverMesh = new THREE.Mesh(riverGeo, riverMat);
+        riverMesh.rotation.x = -Math.PI / 2;
+        riverMesh.position.y = -1;
+        scene.add(riverMesh);
 
-setTimeout(()=>{
-p.style.display="none";
-i++;
-if(i<words.length){
-load();
-}else{
-document.getElementById("word").innerText="ESCAPED 🏆";
-}
-},800);
-}
-
-load();
-
-</script>
-
-</body>
-</html>
+        const bankGeo = new THREE.BoxGeometry(8, 5, 200);
+        const bankMat = new THREE.MeshStandardMaterial({ color: '#143d14', roughness: 0.9 });
+        
+        const leftBank = new THREE.Mesh(bankGeo, bankMat);
+        leftBank.position.set(-12, 1, -50);
+        scene.add(leftBank);
