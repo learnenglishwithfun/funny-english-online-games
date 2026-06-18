@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dino River Escape 3D - Fixed Jump Version</title>
+    <title>Dino River Escape 3D - Achievements Edition</title>
     <style>
         body, html {
             margin: 0;
@@ -154,6 +154,19 @@
             padding: 0 20px;
         }
 
+        /* Achievement Visual Styling */
+        #star-rating {
+            font-size: 4rem;
+            margin: 15px 0;
+            letter-spacing: 8px;
+            animation: bounce 0.5s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
         .start-btn {
             background: #ebd036;
             color: #1c1c1c;
@@ -186,6 +199,7 @@
 
     <div id="end-screen" class="modal-screen hidden">
         <h1 id="end-title">GAME OVER</h1>
+        <div id="star-rating">⭐⭐⭐</div>
         <p id="end-body">The timer ran out!</p>
         <button class="start-btn" onclick="location.reload()">PLAY AGAIN 🔄</button>
     </div>
@@ -320,7 +334,7 @@
 
     function renderCurrentTurn() {
         if (currentStep >= gameItems.length) {
-            endGame(true, "Incredible! You guided the dinosaur entirely across safely!");
+            endGame(true, "");
             return;
         }
         document.getElementById('score-hud').innerText = `🪵 PLANKS PASSED: ${currentStep}/${gameItems.length}`;
@@ -331,13 +345,11 @@
     let startZ = 0;
 
     function processAnswer(playerInput) {
-        if(!gameActive || isJumping || isTrapped) return; // Prevent spam clicks during animation
+        if(!gameActive || isJumping || isTrapped) return; 
         const solution = gameItems[currentStep].type;
 
         if(playerInput === solution) {
             currentStep++;
-            
-            // Setup jump target calculations universally
             startZ = dinoMesh.position.z;
             targetZ = -currentStep * plankSpacing;
             jumpTime = 0;
@@ -360,15 +372,13 @@
             riverMesh.material.roughness = 0.1 + Math.sin(Date.now() * 0.002) * 0.02;
         }
 
-        // Fixed Jump Physics Animation Loop
         if(isJumping && dinoMesh) {
-            jumpTime += 0.06; // Smooth step rate
+            jumpTime += 0.06; 
             if(jumpTime >= 1.0) {
                 dinoMesh.position.z = targetZ;
                 dinoMesh.position.y = 0;
                 isJumping = false;
             } else {
-                // Linearly interpolate between the start position and target position
                 dinoMesh.position.z = startZ + (targetZ - startZ) * jumpTime;
                 dinoMesh.position.y = Math.sin(jumpTime * Math.PI) * 2.5; 
             }
@@ -388,12 +398,39 @@
         renderer.render(scene, camera);
     }
 
+    // SAFE END GAME STAR SYSTEM CALCULATION ENGINE
     function endGame(isVictory, summaryText) {
         gameActive = false;
         clearInterval(timerInterval);
-        document.getElementById('end-screen').classList.remove('hidden');
-        document.getElementById('end-title').innerText = isVictory ? "🦖 VICTORY!" : "⚠️ TRAPPED!";
-        document.getElementById('end-body').innerText = summaryText;
+        
+        const endScreen = document.getElementById('end-screen');
+        const endTitle = document.getElementById('end-title');
+        const starRating = document.getElementById('star-rating');
+        const endBody = document.getElementById('end-body');
+        
+        endScreen.classList.remove('hidden');
+        
+        if (isVictory) {
+            endTitle.innerText = "🦖 VICTORY!";
+            
+            // Calculate actual seconds spent playing
+            const timeSpent = 45 - timeLeft;
+            
+            if (timeSpent <= 25) {
+                starRating.innerText = "🌟🌟🌟";
+                endBody.innerHTML = `Incredible Speed!<br>You finished in just <b>${timeSpent} seconds</b>!<br>Rank: Gold Dinosaur Master 🏆`;
+            } else if (timeSpent <= 35) {
+                starRating.innerText = "🌟🌟";
+                endBody.innerHTML = `Great job!<br>You completed it in <b>${timeSpent} seconds</b>!<br>Rank: Silver Explorer 🥈`;
+            } else {
+                starRating.innerText = "🌟";
+                endBody.innerHTML = `You made it!<br>Completed in <b>${timeSpent} seconds</b>.<br>Rank: Bronze Survivor 🪵`;
+            }
+        } else {
+            endTitle.innerText = "⚠️ TRAPPED!";
+            starRating.innerText = "❌";
+            endBody.innerText = summaryText;
+        }
     }
 
     function startAudioLoop() {
@@ -404,7 +441,7 @@
                     playTone(60, 0.1); 
                 }
             }, 800);
-        } catch(e) { console.log("Audio contextual block overridden"); }
+        } catch(e) { console.log("Audio block bypass"); }
     }
 
     function playTone(freq, duration) {
